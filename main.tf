@@ -103,6 +103,17 @@ resource "archive_file" "zip" {
   source_dir = "/Users/d.gorlov/PycharmProjects/cheatsheet_itis_2024_vvot00_bot_py/main"
 }
 
-data "http" "set_webhook_tg" {
-  url = "https://api.telegram.org/bot${var.tg_bot_key}/setWebhook?url=https://functions.yandexcloud.net/${yandex_function.func.id}"
+resource "null_resource" "curl" {
+  provisioner "local-exec" {
+    command = "curl --insecure -X POST https://api.telegram.org/bot${var.tg_bot_key}/setWebhook?url=https://functions.yandexcloud.net/${yandex_function.func.id}"
+  }
+
+  triggers = {
+    on_version_change = var.tg_bot_key
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = "curl --insecure -X POST https://api.telegram.org/bot${self.triggers.on_version_change}/deleteWebhook"
+  }
 }
